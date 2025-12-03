@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+
+{% block title %}{{ lesson.title }}{% endblock %}
+
+{% block content %}
+<article class="shadow-sm p-4 bg-white rounded">
+  <h2 class="text-primary">{{ lesson.title }}</h2>
+  <hr />
+
+  {% if lesson.image %}
+  <img src="{{ lesson.image.url }}" class="img-fluid rounded mb-3" alt="{{ lesson.title }}" />
+  {% endif %}
+
+  <div style="line-height: 2;">{{ lesson.content|safe }}</div>
+
+  {% if lesson.code_snippet %}
+  <h5 class="mt-4">نمونه کُد:</h5>
+  <div class="position-relative">
+    <button class="btn btn-sm btn-secondary position-absolute top-0 end-0 m-2" onclick="copyCode(this)">
+      کپی
+    </button>
+    <pre><code class="language-python">{{ lesson.code_snippet }}</code></pre>
+  </div>
+  {% endif %}
+
+  <script>
+    function copyCode(button) {
+      const code = button.nextElementSibling.innerText;
+      navigator.clipboard.writeText(code); # Copy to clipboard
+      button.innerText = "کپی شد!";
+      setTimeout(() => (button.innerText = "کپی"), 2000);
+    }
+  </script>
+
+  <a href="{% url 'lesson_list' %}" class="btn btn-secondary mt-4">بازگشت</a>
+</article>
+{% endblock %}

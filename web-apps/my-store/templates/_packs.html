@@ -1,0 +1,79 @@
+<div class="row g-4">
+  <!-- Pack 1 -->
+  <div class="col-md-4">
+    <div class="card h-100 shadow-sm">
+      <img
+        src="static/Pack Photoes/Pack 1.jpg"
+        class="card-img-top"
+        alt="meme pack 1"
+      />
+      <div class="card-body d-flex flex-column">
+        <h5 class="card-title">Pack 1 — Funny Memes</h5>
+        <p class="card-text small-muted">New memes all over the internet.</p>
+        <div class="mt-auto d-flex justify-content-between align-items-center">
+          <div class="price">$2.99</div>
+          <form action="{% url 'create_checkout_session' %}" method="POST">
+            {% csrf_token %}
+            <input type="hidden" name="packId" value="1" />
+            <button type="submit" class="btn btn-primary">Buy</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Pack 2 -->
+  <div class="col-md-4">
+    <div class="card h-100 shadow-sm">
+      <img
+        src="static/Pack Photoes/Pack 2.jpg"
+        class="card-img-top"
+        alt="Pack 2"
+      />
+      <div class="card-body d-flex flex-column">
+        <h5 class="card-title">Pack 2 — Hella Funny Memes</h5>
+        <p class="card-text small-muted">
+          Some of the best memes on the internet.
+        </p>
+        <div class="mt-auto d-flex justify-content-between align-items-center">
+          <div class="price">$4.99</div>
+          <form action="{% url 'create_checkout_session' %}" method="POST">
+            {% csrf_token %}
+            <input type="hidden" name="packId" value="2" />
+            <button type="submit" class="btn btn-primary">Buy</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Pack 3 -->
+  <div class="col-md-4">
+    <div class="card h-100 shadow-sm">
+      <img
+        src="static/Pack Photoes/Pack 3.jpg"
+        class="card-img-top"
+        alt="Pack 3"
+      />
+      <div class="card-body d-flex flex-column">
+        <div class="d-flex justify-content-between align-items-start mb-2">
+          <h5 class="card-title">
+            Pack 3 — Funny AF
+            <span class="badge badge-rare ms-2">Rare</span>
+          </h5>
+        </div>
+        <p class="card-text small-muted">
+          High level meme knowledge.
+        </p>
+        <div class="mt-auto d-flex justify-content-between align-items-center">
+          <div class="price">$8.99</div>
+          <form action="{% url 'create_checkout_session' %}" method="POST">
+            {% csrf_token %}
+            <input type="hidden" name="packId" value="3" />
+            <button type="submit" class="btn btn-primary">Buy</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

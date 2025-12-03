@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}درس‌ها{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/lessons.css' %}">
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/lessons.js' %}"></script>
+{% endblock %}
+
+{% comment %} Road map part {% endcomment %}
+{% block content %}
+<h2 class="vazirmatn-font mb-4 text-success text-center">مسیر یادگیری پیشنهادی</h2>
+<div class="mb-4">
+  <ul class="list-group">
+    {% for cat in roadmap_categories %}
+      <li class="list-group-item">
+        <a href="?category={{ cat.code }}">{{ cat.name }}</a>
+      </li>
+    {% endfor %}
+  </ul>
+</div>
+
+
+{% comment %} after clikcing a category {% endcomment %}
+{% if lessons_in_category %}
+  <h3 class="vazirmatn-font mb-3 text-secondary text-center">درس‌های دسته {{ selected_category_name }}</h3>
+  <div class="row">
+    {% for lesson in lessons_in_category %}
+      <div class="col-md-6 mb-4">
+        <div class="card h-100 shadow-sm">
+          {% if lesson.image %}
+            <img src="{{ lesson.image.url }}" class="card-img-top" alt="{{ lesson.title }}">
+          {% endif %}
+          <div class="card-body">
+            <h5 class="card-title">{{ lesson.title }}</h5>
+            <p class="card-text text-muted">{{ lesson.content|truncatewords:25 }}</p>
+            <a href="{% url 'lesson_detail' lesson.slug %}" class="btn btn-outline-primary btn-sm">ادامه مطلب</a>
+          </div>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+{% endif %}
+
+{% comment %} Latest lessons part {% endcomment %}
+<h2 class="mb-4 text-primary text-center">آخرین درس‌های اضافه شده</h2>
+<div class="row">
+  {% for lesson in latest_lessons %}
+    <div class="col-md-6 mb-4">
+      <div class="card h-100 shadow-sm">
+        {% if lesson.image %}
+          <img src="{{ lesson.image.url }}" class="card-img-top" alt="{{ lesson.title }}">
+        {% endif %}
+        <div class="card-body">
+          <h5 class="card-title">{{ lesson.title }}</h5>
+          <p class="card-text text-muted">{{ lesson.content|truncatewords:25 }}</p>
+          <a href="{% url 'lesson_detail' lesson.slug %}" class="btn btn-outline-primary btn-sm">ادامه مطلب</a>
+        </div>
+      </div>
+    </div>
+  {% endfor %}
+</div>
+{% endblock %}

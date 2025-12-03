@@ -1,0 +1,78 @@
+<!-- Checkout modal -->
+<div class="modal fade" id="checkoutModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Checkout</h5>
+        <button
+          type="button"
+          class="btn-close"
+          data-bs-dismiss="modal"
+        ></button>
+      </div>
+      <div class="modal-body">
+        <form id="checkoutForm">
+          <input type="hidden" id="packId" />
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label">Pack</label>
+              <div class="form-control-plaintext" id="packTitleDisplay"></div>
+              <input type="hidden" id="packTitle" />
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Price</label>
+              <div class="form-control-plaintext" id="packPriceDisplay"></div>
+              <input type="hidden" id="packPrice" />
+            </div>
+            <div class="col-12">
+              <label for="recipientEmail" class="form-label"
+                >Recipient's email</label
+              >
+              <input
+                type="email"
+                class="form-control"
+                id="recipientEmail"
+                placeholder="friend@example.com"
+                required
+              />
+            </div>
+            <div class="col-md-6">
+              <label for="senderName" class="form-label"
+                >Your name (for gifts)</label
+              >
+              <input
+                type="text"
+                class="form-control"
+                id="senderName"
+                placeholder="Your name"
+              />
+            </div>
+            <div class="col-md-6 d-flex align-items-center">
+              <div class="form-check mt-4">
+                <input class="form-check-input" type="checkbox" id="isGift" />
+                <label class="form-check-label" for="isGift"
+                  >Is it a gift?</label
+                >
+              </div>
+            </div>
+            <div class="col-12">
+              <label for="giftMessage" class="form-label">Gift message</label>
+              <textarea
+                id="giftMessage"
+                class="form-control"
+                rows="3"
+                placeholder="Write a short message..."
+                disabled
+              ></textarea>
+            </div>
+            <div class="col-12 text-end">
+              <button type="button" id="toPayment" class="btn btn-success">
+                Proceed to payment
+              </button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>

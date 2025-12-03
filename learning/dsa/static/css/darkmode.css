@@ -1,0 +1,140 @@
+/* ================== VARIABLES ================== */
+.dark-mode {
+  --bg-color: #121212;
+  --text-color: #e0e0e0;
+  --card-bg: #1e1e1e;
+  --link-color: #4dabf7;
+  --border-color: #333333;
+  --nav-bg: #1a1a1a;
+  --nav-text: #e0e0e0;
+  --footer-bg: #1a1a1a;
+  --btn-border: #4dabf7;
+}
+/* ================== VARIABLES ================== */
+.dark-mode,
+body.dark-mode {
+  --bg-color: #121212;
+  --text-color: #e0e0e0;
+  --card-bg: #1e1e1e;
+  --link-color: #4dabf7;
+  --border-color: #333333;
+  --nav-bg: #1a1a1a;
+  --nav-text: #e0e0e0;
+  --footer-bg: #1a1a1a;
+  --btn-border: #4dabf7;
+}
+
+/* ================== BASE ELEMENTS ================== */
+.dark-mode body,
+body.dark-mode {
+  background-color: var(--bg-color);
+  color: var(--text-color);
+}
+
+.dark-mode a {
+  color: var(--link-color);
+}
+.dark-mode a,
+body.dark-mode a {
+  color: var(--link-color);
+}
+
+.dark-mode a:hover {
+  text-decoration: underline;
+}
+
+.dark-mode ul,
+.dark-mode ol,
+.dark-mode li,
+.dark-mode p,
+.dark-mode .card-text,
+.dark-mode .text-muted,
+body.dark-mode ul,
+body.dark-mode ol,
+body.dark-mode li,
+body.dark-mode p,
+body.dark-mode .card-text,
+body.dark-mode .text-muted {
+  color: var(--text-color) !important;
+}
+
+.dark-mode h1,
+.dark-mode h2,
+.dark-mode h3,
+.dark-mode h4,
+.dark-mode h5,
+.dark-mode h6,
+.dark-mode .card-title {
+  color: var(--text-color) !important;
+}
+
+.dark-mode .card {
+  background-color: var(--card-bg);
+  border-color: var(--border-color);
+}
+
+/* Ensure paragraphs inside cards pick up the dark-mode text color */
+body.dark-mode .card p,
+body.dark-mode .card .card-text {
+  color: var(--text-color) !important;
+}
+
+.dark-mode .list-group-item {
+  background-color: var(--card-bg);
+  color: var(--text-color);
+  border-color: var(--border-color);
+}
+
+.dark-mode .navbar {
+  background-color: var(--nav-bg);
+  color: var(--nav-text);
+}
+
+.dark-mode footer {
+  background-color: var(--footer-bg);
+  color: var(--text-color);
+}
+
+.dark-mode .btn-toggle {
+  border-color: var(--btn-border);
+  color: var(--btn-border);
+}
+
+/* Navbar and toggler adjustments to override Bootstrap defaults in dark mode */
+body.dark-mode .navbar,
+.dark-mode .navbar {
+  background-color: var(--nav-bg) !important;
+  border-color: var(--border-color) !important;
+}
+
+body.dark-mode .navbar .navbar-brand,
+body.dark-mode .navbar .nav-link,
+body.dark-mode .navbar .btn,
+.dark-mode .navbar .navbar-brand,
+.dark-mode .navbar .nav-link,
+.dark-mode .navbar .btn {
+  color: var(--nav-text) !important;
+}
+
+/* Toggler icon: make it visible in dark mode */
+body.dark-mode .navbar-toggler {
+  border-color: var(--border-color) !important;
+}
+body.dark-mode .navbar-toggler-icon {
+  background-image: none !important;
+  color: var(--nav-text);
+}
+
+/* Article / content area defaults for dark mode */
+body.dark-mode article,
+.dark-mode article {
+  background-color: transparent;
+  color: var(--text-color) !important;
+}
+
+body.dark-mode article p,
+body.dark-mode article .lead,
+.dark-mode article p,
+.dark-mode article .lead {
+  color: var(--text-color) !important;
+}

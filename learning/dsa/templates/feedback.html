@@ -1,0 +1,65 @@
+{% extends "base.html" %} {% load static %} {% block title %}بازخورد{%endblock%}
+{% block content %}       
+
+<div class="alert alert-info" role="alert">
+  <h4 class="alert-heading">بازخورد شما برای ما مهم است!</h4>
+  {% comment %} comment before sending a feedback {% endcomment %}
+  <p>قبل ازاینکه بازخوردی ارسال کنید!</p>
+  <p>
+    سلام و درود! <br />
+    از اینکه وقت می‌گذارید و بازخورد خود را با ما به اشتراک می‌گذارید، بسیار
+    سپاسگزاریم.<br />
+    خوشحال میشویم نکات زیر را قبل از فرستادن بازخوردتان به ما در نظر بگیرید!
+  </p>
+  <ul>
+    <li>اگر درسی ناقص یا اشتباه بود، لطفا به ما اطلاع دهید.</li>
+    <li>به زودی زبان‌های پشتو و انگلیسی اضافه خواهد شد.</li>
+    <li> تا جای ممکن سعی در پاسداری زبان فارسی/دری کردیم.</li>
+    <li> از لحاظ تخصصی ما توسعه دهنده‌وب نیستیم اگر تمایل به همکاری در راستای توسعه سایت دارید، لینک <a href='https://github.com/RafiZahedi/DariDSA'> Github </a> اینجاست.</li>
+  </div>
+<div class="container mt-4">
+
+    <h2 class="mb-4">بازخورد شما</h1>
+
+  <form method="post" action="">
+    {% csrf_token %} {% comment %} name {% endcomment %}
+    <div class="mb-3">
+      <label for="name" class="form-label">نام شما (اختیاری):</label>
+      <input
+        type="text"
+        class="form-control"
+        id="name"
+        name="name"
+        placeholder="نام خود را وارد کنید"
+      />
+    </div>
+    {% comment %} email {% endcomment %}
+    <div class="mb-3">
+      <label for="email" class="form-label">ایمیل شما (اختیاری):</label>
+      <input
+        style="text-align: right; direction: rtl"
+        type="email"
+        class="form-control"
+        id="email"
+        name="email"
+        placeholder="ایمیل خود را وارد کنید"
+      />
+    </div>
+    {% comment %} message {% endcomment %}
+    <div class="mb-3">
+      <label for="message" class="form-label">پیام شما:</label>
+      <textarea
+        class="form-control"
+        id="message"
+        name="message"
+        rows="5"
+        placeholder="پیام خود را وارد کنید"
+        required
+      ></textarea>
+    </div>
+    <button type="submit" class="btn btn-success">ارسال بازخورد</button>
+    {% comment%} erase all {% endcomment %}
+    <button type="reset" class="btn btn-danger ms-2">پاک کردن</button>
+  </form>
+</div>
+{% endblock content %}

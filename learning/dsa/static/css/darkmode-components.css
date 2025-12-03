@@ -1,0 +1,119 @@
+/* Dark-mode component overrides for Bootstrap and common components
+   Loaded after darkmode.css so it can override Bootstrap defaults where needed
+*/
+
+/* Navbar collapse and menu */
+body.dark-mode .navbar-collapse,
+body.dark-mode .navbar .navbar-nav {
+  background-color: var(--nav-bg) !important;
+}
+
+body.dark-mode .navbar .nav-link,
+body.dark-mode .navbar .navbar-brand {
+  color: var(--nav-text) !important;
+}
+
+/* Dropdowns */
+body.dark-mode .dropdown-menu {
+  background-color: var(--card-bg) !important;
+  color: var(--text-color) !important;
+  border-color: var(--border-color) !important;
+}
+
+body.dark-mode .dropdown-item {
+  color: var(--text-color) !important;
+}
+body.dark-mode .dropdown-item:hover,
+body.dark-mode .dropdown-item:focus {
+  background-color: rgba(255, 255, 255, 0.03) !important;
+}
+
+/* Forms */
+body.dark-mode .form-control,
+body.dark-mode textarea.form-control,
+body.dark-mode select.form-control {
+  background-color: #171717 !important;
+  color: var(--text-color) !important;
+  border-color: var(--border-color) !important;
+}
+body.dark-mode .form-control::placeholder {
+  color: #9e9e9e !important;
+}
+
+/* Tables */
+body.dark-mode .table {
+  color: var(--text-color) !important;
+  border-color: var(--border-color) !important;
+}
+body.dark-mode .table thead th {
+  color: var(--text-color) !important;
+  background-color: transparent !important;
+}
+
+/* Modals */
+body.dark-mode .modal-content {
+  background-color: var(--card-bg) !important;
+  color: var(--text-color) !important;
+  border-color: var(--border-color) !important;
+}
+
+/* Badges, alerts, breadcrumbs */
+body.dark-mode .badge {
+  background-color: rgba(255, 255, 255, 0.06) !important;
+  color: var(--text-color) !important;
+}
+
+body.dark-mode .alert {
+  background-color: rgba(255, 255, 255, 0.03) !important;
+  color: var(--text-color) !important;
+  border-color: var(--border-color) !important;
+}
+
+body.dark-mode .breadcrumb {
+  background-color: transparent !important;
+}
+
+/* Small utility: make links inside cards stand out */
+body.dark-mode .card a {
+  color: var(--link-color) !important;
+}
+
+/* Override Bootstrap utility that forces white background (used on article) */
+body.dark-mode .bg-white,
+body.dark-mode article.bg-white {
+  background-color: var(--card-bg) !important;
+  color: var(--text-color) !important;
+  border-color: var(--border-color) !important;
+}
+
+/* Article content (lesson detail) - ensure readable text and spacing */
+body.dark-mode article,
+.dark-mode article {
+  background-color: var(--card-bg) !important;
+  color: var(--text-color) !important;
+}
+
+/* Code blocks and inline code */
+body.dark-mode pre,
+body.dark-mode code,
+body.dark-mode pre code,
+.dark-mode pre,
+.dark-mode code,
+.dark-mode pre code {
+  background-color: #0f0f0f !important;
+  color: var(--text-color) !important;
+  border: 1px solid var(--border-color) !important;
+}
+
+/* Buttons (secondary) - make them visible and match theme */
+body.dark-mode .btn-secondary,
+.dark-mode .btn-secondary {
+  background-color: rgba(255, 255, 255, 0.06) !important;
+  color: var(--text-color) !important;
+  border-color: var(--border-color) !important;
+}
+
+/* Ensure positioned copy button is visible above code */
+body.dark-mode .position-relative .btn {
+  z-index: 5;
+}

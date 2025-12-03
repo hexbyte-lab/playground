@@ -1,0 +1,66 @@
+body {
+  background: #f7fafc;
+  transition: background 0.3s, color 0.3s;
+}
+.price {
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+.card-img-top {
+  height: 180px;
+  object-fit: cover;
+}
+.badge-rare {
+  background: linear-gradient(90deg, #8e2de2, #4a00e0);
+  color: white;
+}
+.small-muted {
+  font-size: 0.9rem;
+  color: #6c757d;
+}
+footer {
+  padding: 2rem 0;
+}
+
+/* Dark mode */
+body.dark-mode {
+  background: #1a202c;
+  color: #e2e8f0;
+}
+body.dark-mode .navbar,
+body.dark-mode footer {
+  background: #2d3748 !important;
+  color: #e2e8f0;
+}
+body.dark-mode .card {
+  background: #2d3748;
+  color: #e2e8f0;
+}
+body.dark-mode .small-muted {
+  color: #a0aec0;
+}
+body.dark-mode .btn-outline-secondary {
+  color: #e2e8f0;
+  border-color: #a0aec0;
+}
+/* Dark mode for modal */
+body.dark-mode .modal-content {
+  background-color: #2d3748;
+  color: #e2e8f0;
+}
+body.dark-mode .modal-header,
+body.dark-mode .modal-footer {
+  border-color: #4a5568;
+}
+body.dark-mode .form-control {
+  background-color: #4a5568;
+  border-color: #2d3748;
+  color: #e2e8f0;
+}
+body.dark-mode .form-control:focus {
+  background-color: #4a5568;
+  color: #fff;
+}
+body.dark-mode .form-text {
+  color: #a0aec0;
+}
