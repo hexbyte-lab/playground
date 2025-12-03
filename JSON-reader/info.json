@@ -1,0 +1,21 @@
+{
+    "email domains": {
+        "gmail":
+        {
+            "john": "john@gmail.com",
+            "jane": "jane@gmail.com",
+            "jill": "jill@gmail.com"
+        },
+        "yahoo":
+        {
+            "john": "john@yahoo.com",
+            "jane": "jane@yahoo.com",
+            "jill": "jill@yahoo.com"
+        },
+        "other":
+        {
+            "james": "james@sasktel.com",
+            "jhoana": "jhoana@rogers.com"
+        }
+    }
+}
