@@ -34,7 +34,7 @@ def maxMatrixSum(matrix: List[List[int]]) -> int:
     if negative_count % 2 == 0:
         return total_sum
     else:
-        return total_sum - 2 * min_abs_val
+        return total_sum - 2 * int(min_abs_val)
 
 
 """
