@@ -1,0 +1,53 @@
+# ---- Python ----
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+env/
+venv/
+ENV/
+.venv/
+
+# ---- Django ----
+*.log
+*.pot
+db.sqlite3
+db.sqlite3-journal
+
+# ---- Test / type-checker caches ----
+.mypy_cache/
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+.tox/
+
+# ---- C / C++ build artifacts ----
+*.o
+*.obj
+*.exe
+*.out
+*.dll
+*.so
+*.dylib
+*.a
+*.lib
+
+# ---- Environment / secrets ----
+.env
+
+# ---- IDEs / editors ----
+.idea/
+.vscode/
+
+# ---- OS files ----
+.DS_Store
+Thumbs.db
+
+# ---- Packaging ----
+*.egg
+*.egg-info/
+dist/
+build/
+CLAUDE.md

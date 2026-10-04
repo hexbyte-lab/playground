@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>WealthGlobe — the money map of the world</title>
+    <link rel="preconnect" href="https://unpkg.com" />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div id="globeViz"></div>
+
+    <!-- top-left brand + lens picker -->
+    <header id="hud">
+      <div class="brand">
+        <span class="dot"></span> WEALTH<span class="thin">GLOBE</span>
+      </div>
+      <p class="tag">Spin the world. Watch the money light up.</p>
+
+      <div class="lenses" id="lenses">
+        <button class="lens active" data-lens="companies">◆ Companies</button>
+        <button class="lens" data-lens="countries">▦ Countries</button>
+        <button class="lens" data-lens="sector">✸ Sectors</button>
+      </div>
+      <div id="filters" class="filters"></div>
+      <div id="legend" class="legend"></div>
+    </header>
+
+    <!-- retention hook: live business headlines ticker -->
+    <div id="ticker">
+      <span class="ticker-label">LIVE&nbsp;WIRE</span>
+      <div class="ticker-track" id="tickerTrack">
+        <span class="ticker-item muted">loading the wire…</span>
+      </div>
+    </div>
+
+    <!-- the single surface: a slide-in detail panel -->
+    <aside id="panel" class="hidden" aria-live="polite">
+      <button id="panelClose" title="close">×</button>
+      <div id="panelBody"></div>
+    </aside>
+
+    <div id="hint">drag to spin · scroll to zoom · click a glowing point</div>
+
+    <!-- three.js + globe.gl (standalone build bundles three) -->
+    <script src="https://unpkg.com/three@0.158.0/build/three.min.js"></script>
+    <script src="https://unpkg.com/globe.gl@2.32.0/dist/globe.gl.min.js"></script>
+    <script src="app.js"></script>
+  </body>
+</html>

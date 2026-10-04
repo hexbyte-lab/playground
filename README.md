@@ -25,6 +25,12 @@ A collection of my personal projects, experiments, and learning materials.
 | [dsa](./learning/dsa/) | Data Structures & Algorithms practice |
 | [cybersecurity-notes](./learning/cybersecurity-notes/) | Cybersecurity study notes |
 
+### 🧩 Practice & Scripts
+| Folder | Description |
+|--------|-------------|
+| [Interview Problems](./Interview%20Problems/README.md) | LeetCode / NeetCode solutions (Python), grouped by technique |
+| [JSON-reader](./JSON-reader/) | Small JSON-reading script |
+
 ---
 
 ## 🚀 Getting Started

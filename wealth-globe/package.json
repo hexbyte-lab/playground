@@ -1,0 +1,13 @@
+{
+  "name": "wealth-globe",
+  "version": "1.0.0",
+  "private": true,
+  "description": "A tactile black-and-white 3D globe that lights up with the world's corporate wealth, paired with live news and stock data.",
+  "type": "commonjs",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2"
+  }
+}
