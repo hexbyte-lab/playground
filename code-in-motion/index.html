@@ -1,0 +1,975 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="claude:viewport-fit-sides" content="cover">
+<title>Code in Motion</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&display=swap">
+<style>
+/* Layout: one brushed-metal device, centred. Dark screen on top, speaker-style chin
+   with controls, then a row: [prev] [short explanation] [next]. */
+:root{
+  --page:#d9dfe7; --ink:#131a26; --muted:#41506a; --accent:#0a54a8;
+  --m1:#f3f5f8; --m2:#bcc5d0; --m3:#e9edf2; --m4:#9ba6b4; --m5:#d3d9e1;
+  --brush:rgba(20,30,50,.045); --edge:#7a8594; --screw:#7f8997;
+  --hi:rgba(255,255,255,.85); --lo:rgba(10,20,40,.28);
+  --knob-a:#fbfcfd; --knob-b:#b3bcc9; --knob-ink:#1b2638;
+  --dot:#8a95a6; --led:#17a34a; --led-off:#d98a0b;
+  --lcd-bg:#0d1527; --lcd-ink:#8de7c4;
+  --font:"Space Grotesk",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --page:#0d1016; --ink:#e7ecf5; --muted:#9eaac0; --accent:#6db6ff;
+    --m1:#4b5361; --m2:#2b313b; --m3:#434b58; --m4:#222730; --m5:#3a4250;
+    --brush:rgba(255,255,255,.035); --edge:#05070a; --screw:#161a21;
+    --hi:rgba(255,255,255,.16); --lo:rgba(0,0,0,.6);
+    --knob-a:#555e6e; --knob-b:#2a303a; --knob-ink:#e6ecf6;
+    --dot:#586377; --led:#35d07f; --led-off:#f0a229;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --page:#0d1016; --ink:#e7ecf5; --muted:#9eaac0; --accent:#6db6ff;
+  --m1:#4b5361; --m2:#2b313b; --m3:#434b58; --m4:#222730; --m5:#3a4250;
+  --brush:rgba(255,255,255,.035); --edge:#05070a; --screw:#161a21;
+  --hi:rgba(255,255,255,.16); --lo:rgba(0,0,0,.6);
+  --knob-a:#555e6e; --knob-b:#2a303a; --knob-ink:#e6ecf6;
+  --dot:#586377; --led:#35d07f; --led-off:#f0a229;
+  color-scheme:dark;
+}
+
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{
+  margin:0; background:var(--page); color:var(--ink);
+  font:400 15px/1.4 var(--font);
+  padding-block:14px 24px;
+  padding-left:max(16px,env(safe-area-inset-left,0px));
+  padding-right:max(16px,env(safe-area-inset-right,0px));
+  -webkit-text-size-adjust:100%;
+}
+.app{max-width:440px;margin:0 auto;display:flex;flex-direction:column;gap:12px}
+
+/* ---- the metal device ---- */
+.device{
+  position:relative; border-radius:24px; padding:12px 12px 6px;
+  touch-action:pan-y; user-select:none; -webkit-user-select:none;
+  background:
+    radial-gradient(circle at 9px 9px,var(--screw) 0 2.6px,transparent 3.2px),
+    radial-gradient(circle at calc(100% - 9px) 9px,var(--screw) 0 2.6px,transparent 3.2px),
+    radial-gradient(circle at 9px calc(100% - 9px),var(--screw) 0 2.6px,transparent 3.2px),
+    radial-gradient(circle at calc(100% - 9px) calc(100% - 9px),var(--screw) 0 2.6px,transparent 3.2px),
+    repeating-linear-gradient(90deg,var(--brush) 0 1px,transparent 1px 3px),
+    linear-gradient(150deg,var(--m1) 0%,var(--m2) 26%,var(--m3) 50%,var(--m4) 74%,var(--m5) 100%);
+  box-shadow:
+    inset 0 1px 0 var(--hi), inset 0 -1px 0 var(--lo),
+    0 0 0 1px var(--edge), 0 14px 28px -12px rgba(10,20,40,.55);
+}
+.screen{
+  width:min(100%,max(270px,calc((100svh - 292px) * .9)));
+  aspect-ratio:9/10; margin-inline:auto;
+  border-radius:14px; overflow:hidden; background:#0a0f1c;
+  box-shadow:inset 0 0 0 2px rgba(0,0,0,.65), 0 0 0 1px var(--lo), 0 1px 0 1px var(--hi);
+  cursor:pointer;
+}
+canvas{display:block;width:100%;height:100%}
+.chin{display:flex;align-items:center;justify-content:space-between;padding:6px 6px 4px}
+.lcd{
+  display:flex;align-items:center;gap:8px;
+  background:var(--lcd-bg);color:var(--lcd-ink);
+  border-radius:8px;padding:6px 10px;
+  font:500 14px/1 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  font-variant-numeric:tabular-nums;letter-spacing:.04em;
+  box-shadow:inset 0 1px 3px rgba(0,0,0,.7), 0 1px 0 var(--hi);
+}
+.led{width:8px;height:8px;border-radius:50%;background:var(--led);box-shadow:0 0 6px var(--led);animation:pulse 2s ease-in-out infinite}
+.paused .led{background:var(--led-off);box-shadow:0 0 6px var(--led-off);animation:none}
+@keyframes pulse{50%{opacity:.45}}
+.tools{display:flex;gap:8px}
+
+.knob{
+  display:grid;place-items:center;padding:0;cursor:pointer;color:var(--knob-ink);
+  border-radius:50%;border:1px solid var(--edge);
+  background:linear-gradient(160deg,var(--knob-a),var(--knob-b));
+  box-shadow:inset 0 1px 0 var(--hi),0 3px 6px -2px rgba(10,20,40,.5);
+  -webkit-tap-highlight-color:transparent;
+  transition:transform .08s ease,box-shadow .08s ease;
+}
+.knob:active{transform:translateY(1px) scale(.97);box-shadow:inset 0 2px 4px var(--lo)}
+.knob:focus-visible,.dot:focus-visible{outline:3px solid var(--accent);outline-offset:3px}
+.knob svg{display:block}
+.mini{width:44px;height:44px}
+.big{width:58px;height:58px}
+
+/* ---- progress dots ---- */
+.dots{display:flex;justify-content:center;flex-wrap:wrap}
+.dot{width:21px;height:24px;padding:0;border:0;background:none;display:grid;place-items:center;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.dot::before{content:"";width:7px;height:7px;border-radius:4px;background:var(--dot);transition:width .25s ease,background .25s ease}
+.dot[aria-current="true"]::before{width:17px;background:var(--accent)}
+
+/* ---- [prev] [explanation] [next] ---- */
+.nav{display:grid;grid-template-columns:58px minmax(0,1fr) 58px;gap:10px;align-items:center}
+.info{min-height:112px;display:flex;flex-direction:column;justify-content:center;gap:5px;text-align:center}
+.kicker{font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--accent)}
+.info h1{margin:0;font-size:23px;line-height:1.1;font-weight:700;text-wrap:balance}
+.info p{margin:0;font-size:15px;line-height:1.35;color:var(--muted);text-wrap:balance}
+.hint{margin:0;text-align:center;font-size:12px;color:var(--muted)}
+@media (prefers-reduced-motion: reduce){.led{animation:none}.knob,.dot::before{transition:none}}
+</style>
+</head>
+<body>
+<div class="app" id="app">
+  <section class="device" id="device" aria-label="Animation player">
+    <div class="screen" id="screenWrap">
+      <canvas id="screen" role="img" aria-label="Animation"></canvas>
+    </div>
+    <div class="chin">
+      <div class="lcd"><span class="led"></span><span id="count">01 / 15</span></div>
+      <div class="tools">
+        <button class="knob mini" id="replay" type="button" aria-label="Replay animation">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M17.65 6.35A7.96 7.96 0 0 0 12 4a8 8 0 1 0 7.73 10h-2.08A6 6 0 1 1 12 6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>
+        </button>
+        <button class="knob mini" id="pp" type="button" aria-label="Pause animation">
+          <svg id="icoPause" width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 5h3.5v14H7zM13.5 5H17v14h-3.5z"/></svg>
+          <svg id="icoPlay" width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" hidden><path d="M8 5v14l11-7z"/></svg>
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <div class="dots" id="dots" role="group" aria-label="Choose an animation"></div>
+
+  <section class="nav" aria-label="Lesson navigation">
+    <button class="knob big" id="prev" type="button" aria-label="Previous animation">
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>
+    </button>
+    <div class="info" aria-live="polite">
+      <span class="kicker" id="kicker"></span>
+      <h1 id="title"></h1>
+      <p id="text"></p>
+    </div>
+    <button class="knob big" id="next" type="button" aria-label="Next animation">
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg>
+    </button>
+  </section>
+  <p class="hint">Tap the screen to pause. Swipe left or right to change.</p>
+</div>
+
+<script>
+(() => {
+'use strict';
+
+/* ================= canvas setup ================= */
+const W = 360, H = 400;
+const cv = document.getElementById('screen');
+const ctx = cv.getContext('2d');
+let sx = 1;
+
+const C = {
+  bg:'#0a0f1c', ink:'#eaf0ff', mute:'#8d9bc0', line:'#35416b', panel:'#13203d',
+  cyan:'#4cc9f0', green:'#4ade80', amber:'#fbbf24', pink:'#f472b6', red:'#fb7185',
+  violet:'#a78bfa', orange:'#fb923c', blue:'#60a5fa'
+};
+const SANS = '"Space Grotesk", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif';
+const MONO = 'ui-monospace, SFMono-Regular, Menlo, Consolas, monospace';
+
+if (!CanvasRenderingContext2D.prototype.roundRect) {
+  CanvasRenderingContext2D.prototype.roundRect = function (x, y, w, h, r) {
+    r = Math.min(r, w / 2, h / 2);
+    this.moveTo(x + r, y); this.arcTo(x + w, y, x + w, y + h, r); this.arcTo(x + w, y + h, x, y + h, r);
+    this.arcTo(x, y + h, x, y, r); this.arcTo(x, y, x + w, y, r); this.closePath();
+  };
+}
+
+/* ================= math ================= */
+const clamp = (x, a = 0, b = 1) => x < a ? a : x > b ? b : x;
+const lerp = (a, b, t) => a + (b - a) * t;
+const ease = t => { t = clamp(t); return t * t * (3 - 2 * t); };
+const easeOut = t => { t = clamp(t); return 1 - Math.pow(1 - t, 3); };
+const back = t => { t = clamp(t); const c = 1.70158; return 1 + (c + 1) * Math.pow(t - 1, 3) + c * Math.pow(t - 1, 2); };
+const seg = (t, a, b) => clamp((t - a) / (b - a));
+const rnd = n => { const s = Math.sin(n * 127.1 + 311.7) * 43758.5453; return s - Math.floor(s); };
+const rgb = c => [1, 3, 5].map(i => parseInt(c.slice(i, i + 2), 16));
+const mix = (c1, c2, t) => { const a = rgb(c1), b = rgb(c2); return 'rgb(' + a.map((v, i) => Math.round(lerp(v, b[i], t))).join(',') + ')'; };
+const rgba = (c, a) => 'rgba(' + rgb(c).join(',') + ',' + a + ')';
+function h16(s) { let h = 0x811c9dc5; for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 0x01000193); } return ((h >>> 0) & 0xffff).toString(16).padStart(4, '0'); }
+
+/* ================= drawing helpers ================= */
+function rrect(x, y, w, h, r) { ctx.beginPath(); ctx.roundRect(x, y, w, h, Math.max(0, Math.min(r, w / 2, h / 2))); }
+function box(x, y, w, h, o = {}) {
+  const { fill, stroke, r = 10, lw = 2, a = 1, dash } = o;
+  ctx.globalAlpha = a; rrect(x, y, w, h, r);
+  if (fill) { ctx.fillStyle = fill; ctx.fill(); }
+  if (stroke) { ctx.lineWidth = lw; ctx.strokeStyle = stroke; ctx.setLineDash(dash || []); ctx.stroke(); ctx.setLineDash([]); }
+  ctx.globalAlpha = 1;
+}
+const cbox = (cx, cy, w, h, o) => box(cx - w / 2, cy - h / 2, w, h, o);
+function circ(x, y, r, o = {}) {
+  const { fill, stroke, lw = 2, a = 1, dash } = o;
+  ctx.globalAlpha = a; ctx.beginPath(); ctx.arc(x, y, Math.max(0, r), 0, Math.PI * 2);
+  if (fill) { ctx.fillStyle = fill; ctx.fill(); }
+  if (stroke) { ctx.lineWidth = lw; ctx.strokeStyle = stroke; ctx.setLineDash(dash || []); ctx.stroke(); ctx.setLineDash([]); }
+  ctx.globalAlpha = 1;
+}
+function ln(x1, y1, x2, y2, color, lw = 2, o = {}) {
+  ctx.globalAlpha = o.a == null ? 1 : o.a; ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2);
+  ctx.strokeStyle = color; ctx.lineWidth = lw; ctx.lineCap = 'round'; ctx.setLineDash(o.dash || []); ctx.stroke(); ctx.setLineDash([]); ctx.globalAlpha = 1;
+}
+function arrow(x1, y1, x2, y2, color, lw = 3, a = 1) {
+  const ang = Math.atan2(y2 - y1, x2 - x1), hl = lw * 3 + 5;
+  ln(x1, y1, x2 - Math.cos(ang) * hl * .6, y2 - Math.sin(ang) * hl * .6, color, lw, { a });
+  ctx.globalAlpha = a; ctx.beginPath(); ctx.moveTo(x2, y2);
+  ctx.lineTo(x2 - hl * Math.cos(ang - .45), y2 - hl * Math.sin(ang - .45));
+  ctx.lineTo(x2 - hl * Math.cos(ang + .45), y2 - hl * Math.sin(ang + .45));
+  ctx.closePath(); ctx.fillStyle = color; ctx.fill(); ctx.globalAlpha = 1;
+}
+function tri(x, y, s, fill, a = 1) {
+  ctx.globalAlpha = a; ctx.beginPath(); ctx.moveTo(x - s, y - s * .8); ctx.lineTo(x + s, y - s * .8); ctx.lineTo(x, y + s * .8);
+  ctx.closePath(); ctx.fillStyle = fill; ctx.fill(); ctx.globalAlpha = 1;
+}
+function txt(s, x, y, o = {}) {
+  const { size = 14, color = C.ink, align = 'center', weight = 700, mono = false, a = 1 } = o;
+  ctx.globalAlpha = a; ctx.fillStyle = color;
+  ctx.font = Math.min(700, weight) + ' ' + size + 'px ' + (mono ? MONO : SANS);
+  ctx.textAlign = align; ctx.textBaseline = 'middle'; ctx.fillText(s, x, y); ctx.globalAlpha = 1;
+}
+function chip(s, cx, cy, fill, o = {}) {
+  const { size = 14, color = '#0a0f1c', a = 1, h = size + 16, stroke, padX = 14 } = o;
+  ctx.font = '700 ' + size + 'px ' + SANS;
+  const w = ctx.measureText(s).width + padX * 2;
+  cbox(cx, cy, w, h, { fill, stroke, lw: 2, r: h / 2, a });
+  txt(s, cx, cy + .5, { size, color, a });
+  return w;
+}
+function scaled(cx, cy, s, fn) { ctx.save(); ctx.translate(cx, cy); ctx.scale(s, s); ctx.translate(-cx, -cy); fn(); ctx.restore(); }
+function glow(x, y, r, color, a = .5) {
+  const g = ctx.createRadialGradient(x, y, 0, x, y, r);
+  g.addColorStop(0, rgba(color, 1)); g.addColorStop(1, rgba(color, 0));
+  ctx.globalAlpha = clamp(a); ctx.fillStyle = g; ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill(); ctx.globalAlpha = 1;
+}
+function cyl(cx, cy, w, h, o = {}) {
+  const { fill = C.panel, stroke = C.mute, lw = 2.5 } = o, rx = w / 2, ry = 13, top = cy - h / 2 + ry, bot = cy + h / 2 - ry;
+  ctx.fillStyle = fill; ctx.strokeStyle = stroke; ctx.lineWidth = lw;
+  ctx.beginPath(); ctx.moveTo(cx - rx, top); ctx.lineTo(cx - rx, bot); ctx.ellipse(cx, bot, rx, ry, 0, Math.PI, 0, true);
+  ctx.lineTo(cx + rx, top); ctx.ellipse(cx, top, rx, ry, 0, 0, Math.PI, true); ctx.closePath(); ctx.fill(); ctx.stroke();
+  ctx.beginPath(); ctx.ellipse(cx, top, rx, ry, 0, 0, Math.PI * 2); ctx.stroke();
+}
+function padlock(x, y, col) {
+  box(x - 10, y - 1, 20, 16, { fill: col, r: 3 });
+  ctx.beginPath(); ctx.arc(x, y - 1, 6, Math.PI, 0); ctx.strokeStyle = col; ctx.lineWidth = 3; ctx.stroke();
+}
+function crown(x, y, col) {
+  ctx.beginPath(); ctx.moveTo(x - 12, y + 8); ctx.lineTo(x - 14, y - 8); ctx.lineTo(x - 6, y - 1); ctx.lineTo(x, y - 11);
+  ctx.lineTo(x + 6, y - 1); ctx.lineTo(x + 14, y - 8); ctx.lineTo(x + 12, y + 8); ctx.closePath(); ctx.fillStyle = col; ctx.fill();
+}
+function wifi(x, y, col, off) {
+  ctx.strokeStyle = col; ctx.lineWidth = 3; ctx.lineCap = 'round';
+  for (let i = 1; i <= 3; i++) { ctx.beginPath(); ctx.arc(x, y + 9, i * 6, -.75 * Math.PI, -.25 * Math.PI); ctx.stroke(); }
+  circ(x, y + 9, 2.8, { fill: col });
+  if (off) ln(x - 14, y - 8, x + 14, y + 16, C.red, 4);
+}
+function userIcon(x, y, col) {
+  circ(x, y - 5, 6.5, { fill: col });
+  ctx.beginPath(); ctx.arc(x, y + 14, 12, Math.PI, 0); ctx.closePath(); ctx.fillStyle = col; ctx.fill();
+}
+function edge(x1, y1, x2, y2, p, color, lw = 5) {
+  if (p <= 0) return;
+  const ym = (y1 + y2) / 2, n = 28; ctx.beginPath(); ctx.moveTo(x1, y1);
+  for (let i = 1; i <= n; i++) {
+    const u = p * i / n, v = 1 - u;
+    ctx.lineTo(v * v * v * x1 + 3 * v * v * u * x1 + 3 * v * u * u * x2 + u * u * u * x2,
+               v * v * v * y1 + 3 * v * v * u * ym + 3 * v * u * u * ym + u * u * u * y2);
+  }
+  ctx.strokeStyle = color; ctx.lineWidth = lw; ctx.lineCap = 'round'; ctx.stroke();
+}
+function caption(t, list) {
+  let cur = null; for (const e of list) if (t >= e[0]) cur = e;
+  if (!cur) return;
+  const a = ease((t - cur[0]) / .3); let size = 15;
+  ctx.font = '700 ' + size + 'px ' + SANS;
+  while (ctx.measureText(cur[1]).width + 32 > 342 && size > 11) { size--; ctx.font = '700 ' + size + 'px ' + SANS; }
+  const w = ctx.measureText(cur[1]).width + 32;
+  cbox(180, 378, w, 30, { fill: 'rgba(255,255,255,0.09)', stroke: 'rgba(255,255,255,0.2)', lw: 1, r: 15, a });
+  txt(cur[1], 180, 378.5, { size, a });
+}
+
+/* ================= the lessons ================= */
+const S = [];
+
+/* 1 ---------- Recursion ---------- */
+S.push({
+  kicker: 'Basics', title: 'Recursion',
+  text: 'A function calls itself. Each call waits on the stack until the one above it answers.', L: 12,
+  draw(t) {
+    txt('3! = 3 × 2 × 1', 180, 30, { size: 19, color: C.mute });
+    const base = 322, fh = 58, gap = 8, fx = 60, fw = 240;
+    const F = [{ n: 3, push: .6, pop: 8.4, ret: 6 }, { n: 2, push: 2, pop: 6.6, ret: 2 }, { n: 1, push: 3.4, pop: 4.9, ret: 1 }];
+    const yTop = i => base - (i + 1) * fh - i * gap;
+    ln(fx - 14, base + 6, fx + fw + 14, base + 6, C.line, 4);
+    txt('STACK', 180, base + 22, { size: 12, color: C.mute });
+    F.forEach((f, i) => {
+      const p = seg(t, f.push, f.push + .5), q = seg(t, f.pop, f.pop + .5);
+      if (p <= 0 || q >= 1) return;
+      const y0 = yTop(i), cy = y0 + fh / 2, dy = (1 - easeOut(p)) * -60, al = Math.min(1, p * 2) * (1 - q);
+      const child = F[i + 1];
+      const got = child ? t >= child.pop + .7 : t >= 4.3;
+      const ret = t >= f.pop - .5;
+      const stroke = (got && !child) || ret ? C.green : C.cyan;
+      scaled(180, cy + dy, 1 - .12 * q, () => {
+        box(fx, y0 + dy, fw, fh, { fill: C.panel, stroke, lw: ret ? 4 : 2.5, a: al });
+        txt('fact(' + f.n + ')', fx + 18, cy + dy, { size: 21, align: 'left', mono: 1, a: al });
+        let s, col = C.mute;
+        if (!child) { s = got ? 'base case!' : '?'; col = got ? C.green : C.mute; }
+        else { s = got ? f.n + ' × ' + child.ret + ' = ' + f.ret : f.n + ' × ?'; col = got ? C.amber : C.mute; }
+        txt(s, fx + fw - 16, cy + dy, { size: 16, align: 'right', mono: 1, color: col, a: al });
+      });
+    });
+    F.forEach((f, i) => {
+      const u = seg(t, f.pop, f.pop + .7); if (u <= 0 || u >= 1) return;
+      const e = ease(u), from = { x: fx + fw - 34, y: yTop(i) + fh / 2 };
+      const to = i > 0 ? { x: fx + fw - 34, y: yTop(i - 1) + fh / 2 } : { x: 180, y: 84 };
+      const x = lerp(from.x, to.x, e), y = lerp(from.y, to.y, e);
+      circ(x, y, 16, { fill: C.amber }); txt(String(f.ret), x, y + 1, { size: 18, color: '#0a0f1c' });
+    });
+    const r = seg(t, 9.1, 9.6);
+    if (r > 0) scaled(180, 84, back(r), () => txt('= 6', 180, 84, { size: 46, color: C.green }));
+    caption(t, [[.3, '① Each call waits on the stack'], [4.3, '② Base case: the answer is 1'], [5.2, '③ Answers fly back down'], [9.1, '④ Done: 3! = 6']]);
+  }
+});
+
+/* 2 ---------- Binary search ---------- */
+S.push({
+  kicker: 'Basics', title: 'Binary search',
+  text: 'Check the middle, throw away half. A billion items need only about 30 looks.', L: 15,
+  draw(t) {
+    const vals = [4, 9, 13, 21, 27, 34, 40, 48, 55, 63, 72, 85], base = 290;
+    const steps = [
+      { mid: 5, lo: 0, hi: 5, msg: '34 < 63  →  go right' }, { mid: 8, lo: 6, hi: 8, msg: '55 < 63  →  go right' },
+      { mid: 10, lo: 10, hi: 11, msg: '72 > 63  →  go left' }, { mid: 9, msg: '63 = 63  ✓' }];
+    const T0 = 1.4, DT = 2.3, bx = i => 12 + i * 28;
+    const fadeOut = 1 - seg(t, 11, 11.4);
+    txt('Find', 46, 40, { size: 17, color: C.mute }); chip('63', 98, 40, C.pink, { size: 19 });
+    const disT = vals.map(() => 1e9);
+    steps.forEach((s, k) => { if (s.lo != null) for (let i = s.lo; i <= s.hi; i++) disT[i] = T0 + DT * k + 1.2; });
+    const k = Math.min(3, Math.floor((t - T0) / DT));
+    vals.forEach((v, i) => {
+      const h = v / 85 * 170, d = ease(seg(t, disT[i], disT[i] + .5));
+      const pk = steps.findIndex(s => s.mid === i);
+      const probing = pk >= 0 && t >= T0 + DT * pk;
+      const found = i === 9 && t >= T0 + DT * 3 + .8;
+      let fill = mix(C.cyan, '#26305a', d);
+      if (probing && d < 1) fill = mix(C.amber, '#26305a', d);
+      if (found) fill = C.green;
+      box(bx(i), base - h, 22, h, { fill, r: 5 });
+      txt(String(v), bx(i) + 11, base - h - 12, { size: 12, a: 1 - .75 * d });
+      if (probing && d < .5) tri(bx(i) + 11, base - h - 30, 7, found ? C.green : C.amber, 1 - d * 2);
+    });
+    if (k >= 0 && t >= T0 + DT * k + .4)
+      txt(steps[k].msg, 252, 40, { size: 16, color: k === 3 ? C.green : C.amber, a: fadeOut * ease((t - T0 - DT * k - .4) / .25) });
+    if (k >= 0) {
+      txt('looks', 44, 322, { size: 15, color: C.mute, a: fadeOut });
+      for (let j = 0; j <= k; j++) circ(88 + j * 24, 322, 7, { fill: C.amber, a: fadeOut });
+    }
+    const u = seg(t, 11.4, 12);
+    if (u > 0) {
+      txt('1,000,000,000 items', 180, 310, { size: 17, color: C.mute, a: u });
+      txt('≈ 30 looks', 180, 340, { size: 28, color: C.green, a: u });
+    }
+    caption(t, [[.3, 'Sorted list. Find 63'], [1.4, 'Check the middle…'], [2.8, '…then throw away half'], [6.2, 'Repeat with what is left'], [9.4, 'Found in 4 looks!'], [11.4, 'Now scale it up…']]);
+  }
+});
+
+/* 3 ---------- Hash table ---------- */
+S.push({
+  kicker: 'Basics', title: 'Hash table',
+  text: 'A hash turns any key into a slot number, so a lookup jumps straight to the right place.', L: 15,
+  draw(t) {
+    const HX = 180, HY = 158, SY = 292, sx = i => 45 + 54 * i;
+    const items = [
+      { w: 'cat', i: 2, c: C.violet, t0: .5 }, { w: 'dog', i: 5, c: C.cyan, t0: 3.5 },
+      { w: 'sun', i: 0, c: C.amber, t0: 6.5 }, { w: 'dog', i: 5, c: C.cyan, t0: 9.8, look: 1 }];
+    let pulse = 0; items.forEach(it => { pulse = Math.max(pulse, Math.sin(Math.PI * seg(t, it.t0 + .8, it.t0 + 1.5))); });
+    glow(HX, HY, 100, C.cyan, .3 * pulse);
+    cbox(HX, HY, 150, 66, { fill: C.panel, stroke: mix(C.mute, C.cyan, pulse), lw: 2.5 });
+    txt('hash( )', HX, HY, { size: 24, mono: 1 });
+    for (let i = 0; i < 6; i++) {
+      cbox(sx(i), SY, 48, 48, { stroke: C.line, lw: 2, dash: [5, 4], r: 8 });
+      txt(String(i), sx(i), SY + 38, { size: 13, color: C.mute });
+    }
+    items.forEach(it => { if (!it.look && t >= it.t0 + 3) chip(it.w, sx(it.i), SY, it.c, { size: 14, padX: 6, h: 34 }); });
+    items.forEach(it => {
+      const a = t - it.t0; if (a < 0 || (!it.look && a > 3.6)) return;
+      const label = it.look ? it.w + '?' : it.w;
+      const style = it.look ? ['#0a0f1c', { stroke: it.c, color: it.c }] : [it.c, {}];
+      const drawChip = (x, y, al) => chip(label, x, y, style[0], Object.assign({ size: 16, a: al }, style[1]));
+      if (a < 1) { const e = ease(a / .9); drawChip(lerp(60, HX, e), lerp(52, HY - 50, e), a > .75 ? 1 - (a - .75) / .25 : 1); }
+      if (a >= 1.4 && (it.look || a < 2.35)) {
+        const al = it.look ? 1 : 1 - seg(a, 2, 2.35);
+        scaled(HX, HY + 58, back(seg(a, 1.4, 1.7)), () => { circ(HX, HY + 58, 17, { fill: it.c, a: al }); txt(String(it.i), HX, HY + 59, { size: 19, color: '#0a0f1c', a: al }); });
+        const p = seg(a, 1.6, 2.1);
+        ln(HX, HY + 78, lerp(HX, sx(it.i), p), lerp(HY + 78, SY - 32, p), it.c, 3, { dash: [5, 5], a: .9 });
+        const sg = it.look ? 1 : 1 - seg(a, 3, 3.4);
+        cbox(sx(it.i), SY, 54, 54, { stroke: it.c, lw: 3.5, r: 10, a: ease(seg(a, 1.6, 1.9)) * sg });
+      }
+      if (!it.look && a >= 2 && a < 3) { const e = ease(a - 2); drawChip(lerp(HX, sx(it.i), e), lerp(HY + 58, SY, e), 1); }
+      if (it.look && a >= 2.6) {
+        const g = ease(seg(a, 2.6, 2.9));
+        cbox(sx(it.i), SY, 56, 56, { stroke: C.green, lw: 4, r: 10, a: g });
+        txt('✓', sx(it.i), SY - 40, { size: 24, color: C.green, a: g });
+      }
+    });
+    caption(t, [[.3, 'A word goes into the hash machine'], [1.8, 'Out comes a number: its address'], [2.9, 'Store it in that slot'], [9.8, 'Later: look up “dog”'], [11.8, 'Same number → jump straight there!']]);
+  }
+});
+
+/* 4 ---------- Cache ---------- */
+S.push({
+  kicker: 'Basics', title: 'Caching',
+  text: 'Keep a copy of the data close by. The second request is far faster than the first.', L: 15,
+  draw(t) {
+    const LX = 135, RX = 225, v = 70;
+    const missF = Math.sin(Math.PI * seg(t, 1.23, 2.0)), hitF = Math.sin(Math.PI * seg(t, 8.43, 9.3));
+    cbox(180, 62, 130, 44, { fill: C.panel, stroke: C.cyan, lw: 2.5 }); txt('You', 180, 62, { size: 18 });
+    const cs = hitF > 0 ? mix(C.amber, C.green, hitF) : mix(C.amber, C.red, missF);
+    cbox(180, 160, 130, 62, { fill: '#1c2548', stroke: cs, lw: 3 });
+    txt('Cache', 180, 145, { size: 15 });
+    cbox(180, 172, 52, 20, { stroke: C.line, lw: 1.5, dash: [4, 3], r: 6 });
+    if (t >= 5.5) scaled(180, 172, back(seg(t, 5.5, 5.9)), () => chip('data', 180, 172, C.pink, { size: 12, h: 20, padX: 8 }));
+    const dbp = Math.sin(Math.PI * seg(t, 3.7, 4.4));
+    glow(180, 300, 90, C.pink, .35 * dbp);
+    cyl(180, 300, 130, 76, { stroke: mix(C.mute, C.pink, dbp) });
+    txt('Database', 180, 304, { size: 15 });
+    if (missF > .05) txt('miss ✗', 302, 160, { size: 18, color: C.red, a: missF });
+    if (hitF > .05) txt('hit ✓', 302, 160, { size: 18, color: C.green, a: hitF });
+    const pkt = (x, y, col) => circ(x, y, 9, { fill: col });
+    if (t >= .6 && t < 3.7) pkt(LX, t < 1.229 ? 86 + v * (t - .6) : t < 1.8 ? 130 : 130 + v * (t - 1.8), C.cyan);
+    if (t >= 4.3 && t < 6.76) pkt(RX, 262 - v * (t - 4.3), C.pink);
+    if (t >= 7.8 && t < 8.43) pkt(LX, 86 + v * (t - 7.8), C.cyan);
+    if (t >= 8.7 && t < 9.27) pkt(RX, 130 - v * (t - 8.7), C.pink);
+    const ok1 = Math.sin(Math.PI * seg(t, 6.76, 7.6)), ok2 = Math.sin(Math.PI * seg(t, 9.27, 10.2));
+    if (Math.max(ok1, ok2) > .05) txt('✓', 262, 62, { size: 24, color: C.green, a: Math.max(ok1, ok2) });
+    let val, col;
+    if (t < .6) { val = 0; col = C.mute; }
+    else if (t < 7.8) { val = Math.round(100 * seg(t, .6, 6.76)); col = mix(C.mute, C.red, seg(t, .6, 6.76)); }
+    else if (t < 8.43) { val = 0; col = C.mute; }
+    else { val = 1; col = C.green; }
+    txt('time', 55, 190, { size: 13, color: C.mute });
+    txt(val + ' ms', 55, 216, { size: 22, mono: 1, color: col });
+    const f = ease(seg(t, 9.8, 10.4));
+    if (f > 0) { txt('100×', 55, 256, { size: 28, color: C.amber, a: f }); txt('faster', 55, 280, { size: 14, color: C.mute, a: f }); }
+    caption(t, [[.4, 'First time: ask the cache'], [1.4, 'Empty! Go to the slow database'], [4.3, 'Bring data back, keep a copy'], [7.6, 'Next time: ask again'], [8.5, 'Found in the cache. Instant!']]);
+  }
+});
+
+/* 5 ---------- Git ---------- */
+S.push({
+  kicker: 'Tools · 2005', title: 'Git branches',
+  text: 'Branch off to try something safely, then merge the work back together.', L: 11,
+  draw(t) {
+    const MX = 110, FX = 250;
+    const c1 = [MX, 82], c2 = [MX, 136], c3 = [MX, 214], f1 = [FX, 186], f2 = [FX, 242], m = [MX, 300];
+    arrow(24, 76, 24, 306, C.line, 2); txt('time', 24, 58, { size: 12, color: C.mute });
+    const gp = (a, b, t0, t1, col) => edge(a[0], a[1], b[0], b[1], seg(t, t0, t1), col);
+    gp(c1, c2, 1.1, 1.6, C.green); gp(c2, c3, 5, 5.5, C.green); gp(c3, m, 6.6, 7.2, C.green);
+    gp(c2, f1, 2.5, 3.2, C.violet); gp(f1, f2, 3.8, 4.3, C.violet); gp(f2, m, 6.6, 7.2, C.violet);
+    const dotAt = (p, t0, col, r = 11) => { const s = back(seg(t, t0, t0 + .4)); if (s > 0) circ(p[0], p[1], r * s, { fill: col, stroke: C.bg, lw: 3 }); };
+    dotAt(c1, .5, C.green); dotAt(c2, 1.6, C.green); dotAt(f1, 3.2, C.violet); dotAt(f2, 4.3, C.violet); dotAt(c3, 5.5, C.green); dotAt(m, 7.2, C.amber, 14);
+    chip('main', MX, 42, C.green, { size: 14, a: ease(seg(t, .2, .6)) });
+    chip('feature', 308, 186, C.violet, { size: 14, a: ease(seg(t, 3.2, 3.6)) });
+    chip('merged!', 46, 300, C.amber, { size: 14, a: ease(seg(t, 7.4, 7.8)) });
+    const u = seg(t, 7.2, 8.1); if (u > 0 && u < 1) circ(m[0], m[1], 14 + 34 * u, { stroke: C.amber, lw: 3, a: 1 - u });
+    caption(t, [[.3, 'Commits are saved snapshots'], [2.5, 'Branch: try something new, safely'], [5, 'Meanwhile, main moves on'], [6.6, 'Merge: combine both'], [8.3, 'Nobody lost any work']]);
+  }
+});
+
+/* 6 ---------- Race condition ---------- */
+S.push({
+  kicker: 'Concurrency', title: 'Race condition',
+  text: 'Two threads update one number at the same moment, and an update is lost. A lock fixes it.', L: 16,
+  draw(t) {
+    const A = { x: 72, y: 150, c: C.blue }, B = { x: 288, y: 150, c: C.orange }, M = { x: 180, y: 290 };
+    const p2 = t >= 8, tt = p2 ? t - 8 : t;
+    chip(p2 ? 'WITH A LOCK' : 'NO LOCK', 180, 34, p2 ? C.green : C.red, { size: 14 });
+    let mem = 5, a = null, b = null, holder = null, bw = false, res = 0;
+    let fl, plus;
+    if (!p2) {
+      if (tt >= 1.4) a = 5; if (tt >= 3.0) a = 6; if (tt >= 4.2) a = null;
+      if (tt >= 2.6) b = 5; if (tt >= 3.6) b = 6; if (tt >= 5.4) b = null;
+      if (tt >= 5.0) mem = 6;
+      if (tt >= 6.6) res = -1;
+      fl = [[.6, 1.4, M, A, 5, A.c], [1.8, 2.6, M, B, 5, B.c], [4.2, 5.0, A, M, 6, A.c], [5.4, 6.2, B, M, 6, B.c]];
+      plus = [[3.0, A], [3.6, B]];
+    } else {
+      if (tt >= .5 && tt < 3.1) holder = A; if (tt >= 3.1 && tt < 5.6) holder = B;
+      if (tt >= .5 && tt < 3.3) bw = true;
+      if (tt >= 1.4) a = 5; if (tt >= 1.9) a = 6; if (tt >= 2.3) a = null;
+      if (tt >= 3.9) b = 6; if (tt >= 4.4) b = 7; if (tt >= 4.8) b = null;
+      if (tt >= 2.9) mem = 6; if (tt >= 5.4) mem = 7;
+      if (tt >= 5.6) res = 1;
+      fl = [[.8, 1.4, M, A, 5, A.c], [2.3, 2.9, A, M, 6, A.c], [3.3, 3.9, M, B, 6, B.c], [4.8, 5.4, B, M, 7, B.c]];
+      plus = [[1.9, A], [4.4, B]];
+    }
+    ln(M.x - 30, M.y - 40, A.x + 20, A.y + 60, C.line, 2, { dash: [4, 5] });
+    ln(M.x + 30, M.y - 40, B.x - 20, B.y + 60, C.line, 2, { dash: [4, 5] });
+    [[A, 'Thread A', a, false], [B, 'Thread B', b, bw]].forEach(([w, name, val, wait]) => {
+      cbox(w.x, w.y, 108, 116, { fill: '#111b36', stroke: w.c, lw: 3 });
+      txt(name, w.x, w.y - 40, { size: 15, color: w.c });
+      txt(val == null ? '–' : String(val), w.x, w.y + 2, { size: 46, color: val == null ? C.line : C.ink });
+      if (wait) txt('waiting…', w.x, w.y + 42, { size: 14, color: C.mute });
+    });
+    plus.forEach(([te, w]) => { const u = seg(tt, te, te + .9); if (u > 0 && u < 1) chip('+1', w.x, w.y - 76 - u * 12, C.green, { size: 14, a: 1 - u }); });
+    const ms = res > 0 ? C.green : res < 0 ? C.red : holder ? holder.c : C.mute;
+    cbox(M.x, M.y, 132, 78, { fill: '#111b36', stroke: ms, lw: 3.5 });
+    txt('counter', M.x, M.y - 24, { size: 13, color: C.mute });
+    txt(String(mem), M.x, M.y + 10, { size: 40, color: res > 0 ? C.green : res < 0 ? C.red : C.ink });
+    if (holder) padlock(M.x + 48, M.y - 28, holder.c);
+    if (res < 0) txt('should be 7 ✗', 180, 346, { size: 17, color: C.red, a: ease(seg(tt, 6.6, 7)) });
+    if (res > 0) txt('correct ✓', 180, 346, { size: 17, color: C.green, a: ease(seg(tt, 5.6, 6)) });
+    fl.forEach(([t0, t1, from, to, val, col]) => {
+      const u = seg(tt, t0, t1); if (u <= 0 || u >= 1) return;
+      const e = ease(u), x = lerp(from.x, to.x, e), y = lerp(from.y, to.y, e);
+      circ(x, y, 17, { fill: col }); txt(String(val), x, y + 1, { size: 19, color: '#0a0f1c' });
+    });
+    caption(t, [[.3, 'Both read the same number'], [3.0, 'Both add 1 on their own'], [4.2, 'Both write back 6'], [6.6, 'One update got lost!'], [8.4, 'Fix: A takes the lock'], [9.9, 'B has to wait'], [11.4, 'Then B goes: 6 → 7'], [13.7, 'Correct: 7 ✓']]);
+  }
+});
+
+/* 7 ---------- Load balancer ---------- */
+S.push({
+  kicker: 'Systems', title: 'Load balancer',
+  text: 'Spread traffic over many servers. If one dies, the others take over.', L: 13,
+  draw(t) {
+    const SV = [{ x: 62, c: C.cyan, n: 'A' }, { x: 180, c: C.violet, n: 'B' }, { x: 298, c: C.amber, n: 'C' }], SY = 290, LBY = 158;
+    const dead = t >= 5 && t < 10;
+    for (let i = 0; i < 5; i++) userIcon(50 + i * 65, 44, C.mute);
+    SV.forEach((s, i) => ln(180, LBY + 22, s.x, SY - 39, i === 1 && dead ? rgba(C.red, .5) : C.line, 2, { dash: [5, 5] }));
+    cbox(180, LBY, 140, 44, { fill: C.panel, stroke: C.cyan, lw: 2.5 }); txt('Load balancer', 180, LBY, { size: 15 });
+    SV.forEach((s, i) => {
+      const d = i === 1 && dead;
+      cbox(s.x, SY, 78, 78, { fill: d ? '#2a1220' : '#111b36', stroke: d ? C.red : s.c, lw: 3 });
+      for (let j = 0; j < 3; j++) {
+        box(s.x - 26, SY - 27 + j * 17, 52, 11, { fill: d ? '#3a1d2c' : '#1b2a52', r: 3 });
+        circ(s.x + 18, SY - 21.5 + j * 17, 2.8, { fill: d ? '#5a2a3c' : C.green, a: d ? 1 : .45 + .55 * (Math.floor(t * 4 + j + i) % 2) });
+      }
+      txt(s.n, s.x, SY + 54, { size: 17, color: d ? C.red : s.c });
+      if (d) { ln(s.x - 22, SY - 22, s.x + 22, SY + 22, C.red, 5); ln(s.x + 22, SY - 22, s.x - 22, SY + 22, C.red, 5); txt('crashed!', s.x, SY - 54, { size: 14, color: C.red }); }
+    });
+    const N = 20, P = .65, LOOP = 13;
+    for (let k = -3; k < N; k++) {
+      const age = t - k * P; if (age < 0 || age > 1.95) continue;
+      const kk = (k + N) % N, d = (((kk * P + .7) % LOOP) + LOOP) % LOOP;
+      const alive = [0, 1, 2].filter(s => !(s === 1 && d >= 4.2 && d < 10));
+      const si = alive[kk % alive.length], ux = 50 + (kk % 5) * 65;
+      let x, y, col = C.ink;
+      if (age < .7) { const e = age / .7; x = lerp(ux, 180, e); y = lerp(62, LBY - 24, e); }
+      else if (age < 1.5) { const e = (age - .7) / .8; x = lerp(180, SV[si].x, e); y = lerp(LBY + 24, SY - 40, e); col = SV[si].c; }
+      else { const u = (age - 1.5) / .45; circ(SV[si].x, SY - 40, 8 + u * 18, { stroke: SV[si].c, lw: 2.5, a: 1 - u }); continue; }
+      circ(x, y, 7, { fill: col });
+    }
+    caption(t, [[.2, 'Requests arrive'], [1.2, 'Spread evenly across servers'], [5, 'Server B crashes!'], [6, 'Others take over. Nobody notices'], [10, 'B is back, sharing again']]);
+  }
+});
+
+/* 8 ---------- Leader election ---------- */
+S.push({
+  kicker: 'Systems · 2014', title: 'Leader election',
+  text: 'When the leader goes silent, servers vote for a new one. The majority wins.', L: 14,
+  draw(t) {
+    const cx = 180, cy = 196, R = 100, TO = [0, 4, 3, 4.6, 5.2], NM = 'ABCDE';
+    const P = [0, 1, 2, 3, 4].map(i => { const a = -Math.PI / 2 + i * 2 * Math.PI / 5; return { x: cx + R * Math.cos(a), y: cy + R * Math.sin(a) }; });
+    const dead0 = t >= 3, L0 = t < 3 ? 0 : t >= 8.2 ? 2 : -1, cand = t >= 6 && t < 8.2 ? 2 : -1;
+    const VOTES = [[1, 6.9], [3, 7.1], [4, 7.3]];
+    if (L0 >= 0) {
+      const ph = (t * .9) % 1;
+      for (let j = 0; j < 5; j++) {
+        if (j === L0 || (j === 0 && dead0)) continue;
+        ln(P[L0].x, P[L0].y, P[j].x, P[j].y, C.line, 2, { a: .7 });
+        circ(lerp(P[L0].x, P[j].x, ph), lerp(P[L0].y, P[j].y, ph), 5.5, { fill: C.amber, a: 1 - ph * .5 });
+      }
+    }
+    if (cand >= 0) VOTES.forEach(([j]) => ln(P[2].x, P[2].y, P[j].x, P[j].y, C.violet, 2, { dash: [5, 5], a: .45 }));
+    for (let j = 0; j < 5; j++) {
+      const p = P[j]; let stroke = C.blue, fill = C.panel, letter = C.ink;
+      const isDead = j === 0 && dead0;
+      if (isDead) { stroke = '#59627a'; fill = '#1a1f2e'; letter = '#59627a'; }
+      else if (j === L0) { stroke = C.amber; fill = '#2b2410'; }
+      else if (j === cand) { stroke = C.violet; fill = '#231a45'; }
+      circ(p.x, p.y, 25, { fill, stroke, lw: 3.5 });
+      txt(NM[j], p.x, p.y + 1, { size: 21, color: letter });
+      if (!isDead && j !== L0 && j !== cand) {
+        let f = 1;
+        if (t >= 3) { const drain = Math.max(0, 1 - (Math.min(t, 6) - 3) / TO[j]); f = t < 6.7 ? drain : lerp(drain, 1, ease(seg(t, 6.7, 7))); }
+        circ(p.x, p.y, 32, { stroke: '#26305a', lw: 4 });
+        if (f > .01) { ctx.beginPath(); ctx.arc(p.x, p.y, 32, -Math.PI / 2, -Math.PI / 2 + f * 2 * Math.PI); ctx.strokeStyle = 'hsl(' + Math.round(f * 120) + ',85%,58%)'; ctx.lineWidth = 4; ctx.lineCap = 'round'; ctx.stroke(); }
+      }
+      if (isDead) { ln(p.x - 13, p.y - 13, p.x + 13, p.y + 13, C.red, 5); ln(p.x + 13, p.y - 13, p.x - 13, p.y + 13, C.red, 5); txt('crashed', p.x, p.y - 42, { size: 13, color: C.red }); }
+      if (j === L0) crown(p.x, p.y - 40, C.amber);
+    }
+    if (t >= 6 && t < 7.6) chip('vote for me!', P[2].x, P[2].y + 44, C.violet, { size: 13, a: ease(seg(t, 6, 6.3)) * (1 - seg(t, 7.2, 7.6)) });
+    const rq = seg(t, 6, 6.7);
+    if (rq > 0 && rq < 1) VOTES.forEach(([j]) => { const x = lerp(P[2].x, P[j].x, ease(rq)), y = lerp(P[2].y, P[j].y, ease(rq)); circ(x, y, 8, { fill: C.violet }); txt('?', x, y + 1, { size: 12, color: '#0a0f1c' }); });
+    let got = 1;
+    VOTES.forEach(([j, s]) => {
+      const u = seg(t, s, s + .7); if (u >= 1) got++;
+      if (u > 0 && u < 1) { const x = lerp(P[j].x, P[2].x, ease(u)), y = lerp(P[j].y, P[2].y, ease(u)); circ(x, y, 8, { fill: C.green }); txt('✓', x, y + 1, { size: 12, color: '#0a0f1c' }); }
+    });
+    let st, sc;
+    if (t < 3) { st = 'heartbeat ♥'; sc = C.amber; }
+    else if (t < 6) { st = 'silence…'; sc = C.red; }
+    else if (t < 8.2) { st = 'votes ' + got + ' / 5'; sc = got >= 3 ? C.green : C.violet; }
+    else { st = 'leader: C'; sc = C.amber; }
+    chip(st, cx, cy, '#0d1530', { size: 16, color: sc, stroke: C.line });
+    caption(t, [[.3, 'Leader sends heartbeats'], [3, 'Leader crashes!'], [3.8, 'Followers wait. Timers drain…'], [6, 'First timeout: “vote for me!”'], [7.3, 'Majority says yes'], [8.4, 'New leader, heartbeats resume']]);
+  }
+});
+
+/* 9 ---------- CRDT ---------- */
+S.push({
+  kicker: 'Systems · 2011', title: 'CRDTs',
+  text: 'Edit offline on both sides. The changes merge on their own, with no conflicts and no referee.', L: 13,
+  draw(t) {
+    const PA = 42, PB = 218, PH = 112, SXs = [78, 172, 266], YA = PA + 70, YB = PB + 70;
+    const online = t < 1.8 || t >= 5;
+    [[PA, 'Alice', C.pink, YA], [PB, 'Bob', C.cyan, YB]].forEach(([py, name, col, yy]) => {
+      box(20, py, 320, PH, { fill: '#111b36', stroke: C.line, lw: 2, r: 14 });
+      circ(44, py + 24, 11, { fill: col }); txt(name, 64, py + 24, { size: 17, align: 'left' });
+      for (let i = 0; i < 3; i++) cbox(SXs[i], yy, 84, 36, { stroke: C.line, lw: 1.5, dash: [4, 4], r: 10 });
+    });
+    const COL = { milk: C.blue, apple: C.red, banana: C.amber };
+    const item = (w, x, y, s = 1, a = 1) => scaled(x, y, s, () => { cbox(x, y, 84, 36, { fill: COL[w], r: 10, a }); txt(w, x, y + .5, { size: 15, color: '#0a0f1c', a }); });
+    const pop = t0 => back(seg(t, t0, t0 + .4));
+    if (t >= .3) item('milk', SXs[0], YA, pop(.3)); if (t >= .3) item('milk', SXs[0], YB, pop(.3));
+    if (t >= 2.6) item('apple', SXs[1], YA, pop(2.6));
+    if (t >= 6.4) item('banana', SXs[2], YA, pop(6.4));
+    if (t >= 3.6) item('banana', t < 6.4 ? SXs[1] : lerp(SXs[1], SXs[2], ease(seg(t, 6.4, 6.9))), YB, pop(3.6));
+    if (t >= 6.4) item('apple', SXs[1], YB, pop(6.4));
+    const fu = seg(t, 5.4, 6.4);
+    if (fu > 0 && fu < 1) {
+      const e = ease(fu);
+      item('apple', SXs[1], lerp(YA, YB, e), 1, .9);
+      item('banana', lerp(SXs[1], SXs[2], e), lerp(YB, YA, e), 1, .9);
+    }
+    const st = t < 1.8 ? ['online', C.green] : t < 5 ? ['offline', C.red] : t < 7 ? ['syncing…', C.amber] : ['in sync ✓', C.green];
+    wifi(44, 172, online ? st[1] : C.red, !online);
+    txt(st[0], 70, 186, { size: 16, color: st[1], align: 'left' });
+    const ck = ease(seg(t, 7, 7.4));
+    if (ck > 0) { txt('same list ✓', 322, PA + 24, { size: 14, color: C.green, align: 'right', a: ck }); txt('same list ✓', 322, PB + 24, { size: 14, color: C.green, align: 'right', a: ck }); }
+    caption(t, [[.3, 'Two people, one shared list'], [1.8, 'Wi-Fi drops. Both keep editing'], [5, 'Back online: swap changes'], [7, 'Same list on both. No conflict!']]);
+  }
+});
+
+/* 10 ---------- Hash chain ---------- */
+(function () {
+  const data = ['Ann→Bo $5', 'Bo→Cy $2', 'Cy→Di $9', 'Di→Ann $1'], bad = 'Bo→Cy $200';
+  const build = d => { let p = '0000'; return d.map(x => { const h = h16(x + p); const o = { d: x, p, h }; p = h; return o; }); };
+  const orig = build(data), tam = build([data[0], bad, data[2], data[3]]);
+  S.push({
+    kicker: 'Trust · 2008', title: 'Hash chain',
+    text: 'Each block stores the fingerprint of the one before it, so editing history breaks the chain.', L: 13,
+    draw(t) {
+      const cx = 26, cw = 308, ch = 62, Y = i => 36 + i * 80;
+      const tampered = t >= 3 && t < 9.8, broken = t >= 4 && t < 9.8;
+      const edited = t >= 3 && t < 9;
+      const flick = (t >= 3 && t < 3.8) || (t >= 9 && t < 9.8);
+      for (let i = 0; i < 4; i++) {
+        const ap = ease(seg(t, .3 + .5 * i, .7 + .5 * i)); if (ap <= 0) continue;
+        const y = Y(i) + (1 - ap) * 14, B = orig[i];
+        let hash = B.h, dtxt = B.d;
+        if (i === 1) { hash = flick ? h16('f' + Math.floor(t * 25)) : tampered ? tam[1].h : orig[1].h; dtxt = edited ? bad : data[1]; }
+        const bad2 = i === 2 && broken, bad1 = i === 1 && tampered;
+        const stroke = bad1 || bad2 ? C.red : C.line;
+        box(cx, y, cw, ch, { fill: bad1 || bad2 ? '#2a1220' : '#111b36', stroke, lw: bad1 || bad2 ? 3 : 2, r: 12, a: ap });
+        txt('Block ' + i, cx + 14, y + 17, { size: 13, color: C.mute, align: 'left', a: ap });
+        if (i === 1 && t >= 3 && t < 3.6) box(cx + cw - 142, y + 6, 130, 22, { fill: rgba(C.red, .35 * (1 - seg(t, 3, 3.6))), r: 6 });
+        txt(dtxt, cx + cw - 14, y + 17, { size: 16, align: 'right', color: i === 1 && edited ? C.red : C.ink, a: ap });
+        txt('prev', cx + 14, y + 44, { size: 12, color: C.mute, align: 'left', a: ap });
+        txt(B.p, cx + 46, y + 44, { size: 14, mono: 1, align: 'left', color: bad2 ? C.red : C.amber, a: ap });
+        txt('hash', cx + cw - 94, y + 44, { size: 12, color: C.mute, align: 'right', a: ap });
+        txt(hash, cx + cw - 14, y + 44, { size: 14, mono: 1, align: 'right', color: i === 1 && tampered ? C.red : C.cyan, a: ap });
+        if (i < 3) {
+          const ya = Y(i) + ch, yb = Y(i + 1), brk = i === 1 && broken;
+          if (!brk) { ln(180, ya, 180, yb, C.green, 5, { a: ap }); }
+          else { ln(180, ya, 180, ya + 5, C.red, 5); ln(180, yb - 5, 180, yb, C.red, 5); txt('✗', 180, (ya + yb) / 2 + 1, { size: 16, color: C.red }); txt('no match!', 204, (ya + yb) / 2 + 1, { size: 14, color: C.red, align: 'left' }); }
+        }
+      }
+      caption(t, [[.4, 'Each block holds the last fingerprint'], [3, 'Someone edits an old block'], [4.1, 'Its fingerprint changes. Link breaks!'], [9, 'Undo the edit: chain is valid again']]);
+    }
+  });
+})();
+
+/* 11 ---------- A* ---------- */
+(function () {
+  const rows = ['............', '............', '......#.....', '......#.....', '......#.....', '......#.....', '......#.....', '......#.....', '......#.....', '......#.....', '............', '............'];
+  const Gc = 12, Gr = 12, CELL = 27, GX = 18, GY = 26;
+  const wall = rows.map(r => [...r].map(c => c === '#'));
+  const st = [1, 5], go = [10, 5], key = (x, y) => x + ',' + y;
+  const order = [], openedAt = new Map(), closedAt = new Map(), par = new Map(), gs = new Map();
+  const hh = (x, y) => Math.abs(x - go[0]) + Math.abs(y - go[1]);
+  let open = [{ x: st[0], y: st[1] }]; gs.set(key(st[0], st[1]), 0); openedAt.set(key(st[0], st[1]), 0);
+  while (open.length) {
+    open.sort((a, b) => (gs.get(key(a.x, a.y)) + hh(a.x, a.y)) - (gs.get(key(b.x, b.y)) + hh(b.x, b.y)) || hh(a.x, a.y) - hh(b.x, b.y));
+    const c = open.shift(), ck = key(c.x, c.y);
+    if (closedAt.has(ck)) continue;
+    closedAt.set(ck, order.length); order.push(c);
+    if (c.x === go[0] && c.y === go[1]) break;
+    for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+      const nx = c.x + dx, ny = c.y + dy; if (nx < 0 || ny < 0 || nx >= Gc || ny >= Gr || wall[ny][nx]) continue;
+      const nk = key(nx, ny), ng = gs.get(ck) + 1;
+      if (!gs.has(nk) || ng < gs.get(nk)) { gs.set(nk, ng); par.set(nk, c); open.push({ x: nx, y: ny }); if (!openedAt.has(nk)) openedAt.set(nk, order.length); }
+    }
+  }
+  const path = []; { let cur = { x: go[0], y: go[1] }; while (cur) { path.unshift(cur); cur = par.get(key(cur.x, cur.y)); } }
+  const cc = (x, y) => [GX + x * CELL + CELL / 2, GY + y * CELL + CELL / 2];
+  S.push({
+    kicker: 'Algorithms · 1968', title: 'A* pathfinding',
+    text: 'Search smartly, toward the goal first. This is how maps and games find routes.', L: 14,
+    draw(t) {
+      const s = Math.floor(seg(t, 1, 8) * order.length);
+      for (let y = 0; y < Gr; y++) for (let x = 0; x < Gc; x++) {
+        const k = key(x, y), px = GX + x * CELL + 1.5, py = GY + y * CELL + 1.5, sz = CELL - 3;
+        if (wall[y][x]) { box(px, py, sz, sz, { fill: '#3a4778', r: 6 }); continue; }
+        const ca = closedAt.get(k), oa = openedAt.get(k);
+        if (ca !== undefined && ca < s) box(px, py, sz, sz, { fill: mix('#2563eb', '#8b5cf6', ca / order.length), r: 6 });
+        else if (oa !== undefined && oa <= s && s > 0) box(px, py, sz, sz, { fill: rgba(C.cyan, .3), stroke: C.cyan, lw: 1.5, r: 6 });
+        else box(px, py, sz, sz, { fill: '#0f1830', r: 6 });
+      }
+      const p = seg(t, 8.2, 10.4) * (path.length - 1);
+      if (p > 0) {
+        ctx.beginPath(); const a0 = cc(path[0].x, path[0].y); ctx.moveTo(a0[0], a0[1]);
+        let end = a0;
+        for (let i = 1; i < path.length; i++) {
+          const q = cc(path[i].x, path[i].y), pr = cc(path[i - 1].x, path[i - 1].y), f = clamp(p - (i - 1));
+          if (f <= 0) break; end = [lerp(pr[0], q[0], f), lerp(pr[1], q[1], f)]; ctx.lineTo(end[0], end[1]);
+        }
+        ctx.strokeStyle = C.amber; ctx.lineWidth = 7; ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.stroke();
+        circ(end[0], end[1], 6, { fill: '#fff' });
+      }
+      const sc = cc(st[0], st[1]), gc = cc(go[0], go[1]);
+      circ(sc[0], sc[1], 11, { fill: C.green, stroke: C.bg, lw: 2 }); txt('S', sc[0], sc[1] + 1, { size: 14, color: '#0a0f1c' });
+      circ(gc[0], gc[1], 11, { fill: C.pink, stroke: C.bg, lw: 2 }); txt('G', gc[0], gc[1] + 1, { size: 14, color: '#0a0f1c' });
+      caption(t, [[.3, 'Shortest way from S to G'], [1.2, 'Explore smartly, toward G first'], [8.2, 'Shortest path found!']]);
+    }
+  });
+})();
+
+/* 12 ---------- Gradient descent ---------- */
+(function () {
+  const f = x => 2.2 * (x - .6) * (x - .6) + .05 * Math.sin(12 * x);
+  const df = x => 4.4 * (x - .6) + .6 * Math.cos(12 * x);
+  const xs = [.06]; for (let i = 0; i < 16; i++) xs.push(xs[i] - .025 * df(xs[i]));
+  const K = xs.length - 1, PX = x => 20 + x * 320, PY = x => 300 - f(x) * 290;
+  S.push({
+    kicker: 'AI · 1847', title: 'Gradient descent',
+    text: 'How AI learns: feel the slope, take a step downhill, repeat until you reach the bottom.', L: 13,
+    draw(t) {
+      ctx.beginPath(); ctx.moveTo(PX(0), 330);
+      for (let i = 0; i <= 120; i++) { const x = i / 120; ctx.lineTo(PX(x), PY(x)); }
+      ctx.lineTo(PX(1), 330); ctx.closePath();
+      const g = ctx.createLinearGradient(0, 100, 0, 330); g.addColorStop(0, rgba(C.cyan, .25)); g.addColorStop(1, rgba(C.cyan, 0)); ctx.fillStyle = g; ctx.fill();
+      ctx.beginPath(); for (let i = 0; i <= 120; i++) { const x = i / 120; i ? ctx.lineTo(PX(x), PY(x)) : ctx.moveTo(PX(x), PY(x)); }
+      ctx.strokeStyle = C.cyan; ctx.lineWidth = 3.5; ctx.lineJoin = 'round'; ctx.stroke();
+      const kk = clamp(Math.floor((t - 1) / .55), 0, K - 1), p = t < 1 ? 0 : seg(t, 1 + .55 * kk, 1 + .55 * kk + .45);
+      const done = t >= 1 + .55 * K + .45;
+      const bx = done ? xs[K] : lerp(xs[kk], xs[kk + 1], ease(p));
+      for (let j = 0; j <= (done ? K : kk); j++) circ(PX(xs[j]), PY(xs[j]), 3.5, { fill: C.amber, a: .55 });
+      const d = df(bx), sgn = d > 0 ? -1 : 1, vx = sgn, vy = Math.abs(d) * 290 / 320, vl = Math.hypot(vx, vy);
+      if (!done) {
+        const al = 1 - .8 * ease(seg(p, .5, 1)), bxp = PX(bx), byp = PY(bx) - 15;
+        arrow(bxp, byp, bxp + vx / vl * 58, byp + vy / vl * 58, C.green, 4.5, al);
+      }
+      glow(PX(bx), PY(bx) - 11, 26, C.amber, .45);
+      circ(PX(bx), PY(bx) - 11, 11, { fill: C.amber, stroke: C.bg, lw: 2 });
+      const fv = f(bx);
+      txt('loss', 22, 34, { size: 16, color: C.mute, align: 'left' });
+      box(70, 26, 150, 16, { fill: '#16213f', r: 8 });
+      box(70, 26, Math.max(10, 150 * clamp(fv / .68)), 16, { fill: 'hsl(' + Math.round(120 * (1 - clamp(fv / .6))) + ',80%,55%)', r: 8 });
+      txt(fv.toFixed(2), 234, 34, { size: 17, mono: 1, align: 'left' });
+      if (done) { const u = ease(seg(t, 1 + .55 * K + .45, 1 + .55 * K + .95)); circ(PX(bx), PY(bx) - 11, 18 + 8 * u, { stroke: C.green, lw: 3, a: u }); txt('lowest point', PX(bx), PY(bx) - 52, { size: 16, color: C.green, a: u }); }
+      caption(t, [[.3, 'Goal: reach the lowest point'], [1.2, 'Feel the slope, step downhill'], [4.6, 'Steps get smaller near the bottom'], [10.4, 'Lowest point = best answer']]);
+    }
+  });
+})();
+
+/* 13 ---------- Embeddings ---------- */
+(function () {
+  const E = [
+    { w: 'cat', g: 0, a: [-30, -22] }, { w: 'dog', g: 0, a: [32, -8] }, { w: 'fish', g: 0, a: [-6, 30] },
+    { w: 'car', g: 1, a: [-32, -14] }, { w: 'bus', g: 1, a: [30, -22] }, { w: 'bike', g: 1, a: [2, 28] },
+    { w: 'man', g: 2, a: [-48, -26] }, { w: 'woman', g: 2, a: [44, -30] }, { w: 'king', g: 2, a: [-36, 28] }, { w: 'queen', g: 2, a: [48, 26] }];
+  const GC = [[92, 112], [268, 112], [180, 262]], GCOL = [C.green, C.orange, C.cyan];
+  const PB = { man: [95, 318], woman: [95, 222], king: [265, 318], queen: [265, 222] };
+  E.forEach((e, i) => { e.s = [34 + rnd(i * 2 + 1) * 292, 70 + rnd(i * 2 + 2) * 240]; });
+  S.push({
+    kicker: 'AI · 2013', title: 'Embeddings',
+    text: 'AI turns words into points. Similar meaning sits close together, and relations become directions.', L: 13,
+    draw(t) {
+      const p1 = ease(seg(t, 1.4, 4)), p2 = ease(seg(t, 6.2, 7.2)), dim = 1 - .82 * ease(seg(t, 6, 6.6));
+      GC.forEach((c, g) => circ(c[0], c[1], 62, { fill: rgba(GCOL[g], .11 * p1), a: g === 2 ? 1 - ease(seg(t, 6, 6.6)) : dim }));
+      const pos = {};
+      E.forEach(e => {
+        let x = lerp(e.s[0], GC[e.g][0] + e.a[0], p1), y = lerp(e.s[1], GC[e.g][1] + e.a[1], p1);
+        if (e.g === 2) { x = lerp(x, PB[e.w][0], p2); y = lerp(y, PB[e.w][1], p2); }
+        pos[e.w] = [x, y];
+      });
+      const a1 = seg(t, 7.4, 8.2);
+      if (a1 > 0) arrow(95, 304, 95, lerp(304, 240, a1), C.amber, 4);
+      const u = seg(t, 8.4, 9.4);
+      if (u > 0) arrow(lerp(95, 265, ease(u)), 304, lerp(95, 265, ease(u)), 240, C.amber, 4, .95);
+      const hit = ease(seg(t, 9.4, 9.8));
+      E.forEach(e => {
+        const [x, y] = pos[e.w], isQ = e.w === 'queen', a = e.g === 2 ? 1 : dim;
+        const col = isQ && hit > 0 ? mix(GCOL[2], C.green, hit) : mix(C.mute, GCOL[e.g], p1);
+        if (isQ && hit > 0) glow(x, y, 36, C.green, .5 * hit);
+        circ(x, y, 7.5, { fill: col, a });
+        txt(e.w, x, y + (e.w === 'woman' || isQ ? -18 : 18), { size: 14, a, color: isQ && hit > .5 ? C.green : C.ink });
+      });
+      const eq = ease(seg(t, 6.4, 7));
+      if (eq > 0) txt('king − man + woman', 180, 34, { size: 21, a: eq });
+      const q = seg(t, 9.6, 10.1);
+      if (q > 0) scaled(180, 64, back(q), () => txt('= queen ✓', 180, 64, { size: 26, color: C.green }));
+      caption(t, [[.3, 'Words start as random points'], [1.4, 'AI learns: similar meaning → closer'], [6.2, 'Relations become directions'], [8.4, 'Same step moves king to queen']]);
+    }
+  });
+})();
+
+/* 14 ---------- Attention ---------- */
+(function () {
+  const words = ['The', 'animal', 'didn’t', 'cross', 'because', 'it', 'was', 'tired'];
+  const Q = [
+    { q: 5, w: [.02, .62, .02, .04, .03, .10, .06, .11] },
+    { q: 7, w: [.01, .38, .02, .03, .03, .22, .26, .05] },
+    { q: 3, w: [.02, .50, .28, .04, .06, .04, .02, .04] }];
+  S.push({
+    kicker: 'AI · 2017', title: 'Attention',
+    text: 'Each word looks at the other words to decide which ones matter. This is how language models read.', L: 12,
+    draw(t) {
+      const qi = Math.floor(t / 4) % 3, lt = t % 4, q = Q[qi], grow = ease(seg(lt, .5, 1.4));
+      const Y = i => 70 + i * 36, LX = 76, RX = 248;
+      txt('word', LX, 36, { size: 13, color: C.mute }); txt('looks at', RX, 36, { size: 13, color: C.mute });
+      const top = q.w.indexOf(Math.max(...q.w));
+      q.w.forEach((w, j) => {
+        const x2 = lerp(LX + 56, RX - 56, grow), y2 = lerp(Y(q.q), Y(j), grow);
+        ln(LX + 56, Y(q.q), x2, y2, j === top ? C.amber : C.cyan, 1.5 + 9 * w, { a: (.3 + .7 * w) * Math.min(1, grow * 2) });
+      });
+      words.forEach((wd, i) => {
+        const act = i === q.q;
+        cbox(LX, Y(i), 108, 29, { fill: act ? C.pink : C.panel, stroke: act ? C.pink : C.line, lw: 2, r: 14 });
+        txt(wd, LX, Y(i) + .5, { size: 15, color: act ? '#0a0f1c' : C.ink });
+        const w = q.w[i] * grow;
+        cbox(RX, Y(i), 108, 29, { fill: mix(C.panel, i === top ? C.amber : C.cyan, clamp(w * 1.4)), stroke: i === top && grow > .5 ? C.amber : C.line, lw: 2, r: 14 });
+        txt(wd, RX, Y(i) + .5, { size: 15, color: w > .3 ? '#0a0f1c' : C.ink });
+        if (q.w[i] >= .15 && grow > .8) txt(Math.round(q.w[i] * 100) + '%', RX + 58, Y(i) + .5, { size: 13, color: i === top ? C.amber : C.mute, align: 'left' });
+      });
+      caption(t, [[0, '“it” mostly looks at “animal”'], [4, '“tired” checks “animal” and “was”'], [8, '“cross” checks “animal”, “didn’t”']]);
+    }
+  });
+})();
+
+/* 15 ---------- Diffusion ---------- */
+(function () {
+  const N = 16, CELLS = 20, OX = 20, OY = 30;
+  const TG = [];
+  for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) {
+    let c = '#1b2a52';
+    const d = Math.hypot(x - 7.5, y - 7.5);
+    if (d < 6.8) c = '#ffd23f'; else if (d < 7.8) c = '#f59e0b';
+    if (Math.hypot(x - 5.2, y - 6.3) < 1.6 || Math.hypot(x - 9.8, y - 6.3) < 1.6) c = '#2b2118';
+    const my = Math.hypot(x - 7.5, y - 8.0); if (my > 3.5 && my < 5 && y > 9) c = '#2b2118';
+    TG.push(rgb(c));
+  }
+  S.push({
+    kicker: 'AI · 2020', title: 'Diffusion',
+    text: 'Image AI starts from pure noise and removes a little of it, step after step, until a picture appears.', L: 11,
+    draw(t) {
+      const s = Math.floor(clamp((t - .6) / .55, 0, 10)), amt = Math.pow(1 - s / 10, 1.25);
+      for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) {
+        const tg = TG[y * N + x], col = [0, 1, 2].map(c => {
+          const nz = .78 * rnd(y * 131 + x * 7 + c * 1000.3) + .22 * rnd(y * 17 + x * 29 + c * 3 + s * 91.7);
+          return Math.round(lerp(tg[c], nz * 255, amt));
+        });
+        ctx.fillStyle = 'rgb(' + col.join(',') + ')'; ctx.fillRect(OX + x * CELLS, OY + y * CELLS, CELLS + .6, CELLS + .6);
+      }
+      box(OX, 12, 320, 8, { fill: '#16213f', r: 4 });
+      box(OX, 12, Math.max(8, 320 * s / 10), 8, { fill: mix(C.violet, C.green, s / 10), r: 4 });
+      caption(t, [[.2, 'Start: pure random noise'], [1.2, 'AI removes a little noise…'], [3.6, '…again and again…'], [6.3, 'A picture appears!']]);
+    }
+  });
+})();
+
+/* ================= player ================= */
+const $ = id => document.getElementById(id);
+const reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+let idx = 0, ct = 0, paused = reduce, fade = 1, last = performance.now();
+
+const dotsEl = $('dots');
+S.forEach((s, i) => {
+  const b = document.createElement('button');
+  b.type = 'button'; b.className = 'dot'; b.setAttribute('aria-label', (i + 1) + ': ' + s.title);
+  b.addEventListener('click', () => go(i)); dotsEl.appendChild(b);
+});
+
+function syncPause() {
+  $('app').classList.toggle('paused', paused);
+  $('icoPause').toggleAttribute('hidden', paused); $('icoPlay').toggleAttribute('hidden', !paused);
+  $('pp').setAttribute('aria-label', paused ? 'Play animation' : 'Pause animation');
+}
+function go(i) {
+  idx = (i + S.length) % S.length; const s = S[idx];
+  ct = reduce ? s.L * .8 : 0; fade = 0;
+  $('kicker').textContent = s.kicker; $('title').textContent = s.title; $('text').textContent = s.text;
+  $('count').textContent = String(idx + 1).padStart(2, '0') + ' / ' + S.length;
+  cv.setAttribute('aria-label', s.title + ' animation. ' + s.text);
+  [...dotsEl.children].forEach((d, k) => d.setAttribute('aria-current', k === idx ? 'true' : 'false'));
+  try { history.replaceState(null, '', '#s' + (idx + 1)); } catch (e) {}
+}
+$('prev').addEventListener('click', () => go(idx - 1));
+$('next').addEventListener('click', () => go(idx + 1));
+$('replay').addEventListener('click', () => { ct = 0; fade = 0; if (paused) { paused = false; syncPause(); } });
+$('pp').addEventListener('click', () => { paused = !paused; syncPause(); });
+document.addEventListener('keydown', e => {
+  if (e.key === 'ArrowRight') go(idx + 1); else if (e.key === 'ArrowLeft') go(idx - 1);
+  else if (e.key === ' ' && e.target === document.body) { e.preventDefault(); paused = !paused; syncPause(); }
+});
+let px0 = null;
+const dev = $('screenWrap');
+dev.addEventListener('pointerdown', e => { px0 = [e.clientX, e.clientY]; });
+dev.addEventListener('pointerup', e => {
+  if (!px0) return; const dx = e.clientX - px0[0], dy = e.clientY - px0[1]; px0 = null;
+  if (Math.abs(dx) > 45 && Math.abs(dx) > Math.abs(dy) * 1.3) go(idx + (dx < 0 ? 1 : -1));
+  else if (Math.abs(dx) < 10 && Math.abs(dy) < 10) { paused = !paused; syncPause(); }
+});
+dev.addEventListener('pointercancel', () => { px0 = null; });
+window.addEventListener('hashchange', () => { const m = /^#s(\d+)$/.exec(location.hash); if (m && +m[1] - 1 !== idx) go(+m[1] - 1); });
+
+function fit() {
+  const r = cv.getBoundingClientRect(), d = Math.min(window.devicePixelRatio || 1, 3);
+  cv.width = Math.max(1, Math.round(r.width * d)); cv.height = Math.max(1, Math.round(r.height * d)); sx = cv.width / W;
+}
+if (window.ResizeObserver) new ResizeObserver(fit).observe(cv); window.addEventListener('resize', fit);
+
+let bgGrad = null, warned = false;
+function frame(now) {
+  const dt = Math.min(.05, (now - last) / 1000); last = now;
+  if (!paused) ct += dt;
+  fade = Math.min(1, fade + dt / .35);
+  ctx.setTransform(sx, 0, 0, sx, 0, 0);
+  if (!bgGrad) { bgGrad = ctx.createLinearGradient(0, 0, 0, H); bgGrad.addColorStop(0, '#0b1124'); bgGrad.addColorStop(1, '#080c18'); }
+  ctx.fillStyle = bgGrad; ctx.fillRect(0, 0, W, H);
+  const s = S[idx];
+  try { s.draw(ct % s.L); } catch (err) { if (!warned) { warned = true; console.error(err); } ctx.globalAlpha = 1; ctx.setLineDash([]); }
+  if (fade < 1) { ctx.fillStyle = 'rgba(8,12,24,' + (1 - fade) + ')'; ctx.fillRect(0, 0, W, H); }
+  requestAnimationFrame(frame);
+}
+
+fit(); syncPause();
+{ const m = /^#s(\d+)$/.exec(location.hash); go(m ? clamp(+m[1] - 1, 0, S.length - 1) : 0); }
+requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>
